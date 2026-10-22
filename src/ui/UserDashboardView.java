@@ -258,7 +258,7 @@ public class UserDashboardView extends JFrame implements ActionListener
                 {
                     if (checkBoxes.get(i).isSelected()) 
                     {
-                        selectedIndices.add(i + 1); // 1-based indexing
+                        selectedIndices.add(i + 1); 
                     }
                 }
 
