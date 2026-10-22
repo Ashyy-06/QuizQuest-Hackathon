@@ -7,7 +7,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import models.MultipleSelectMCQ;
 import models.Question;
 import models.SingleChoiceMCQ;
 import models.TrueFalseQuestion;
@@ -244,6 +247,12 @@ public class QuestionDAO
                 addQuestion("Science", "TRUE_FALSE", "Concave mirrors always form virtual and erect images regardless of object position.", "", "false");
                 addQuestion("Science", "TRUE_FALSE", "Transpiration in plants aids in temperature regulation and water transport.", "", "true");
 
+                // Seed Multi-Select Questions for Science
+                addQuestion("Science", "MULTI_SELECT", "Which of the following are greenhouse gases? (Select all that apply)",
+                "Carbon Dioxide|Methane|Argon|Nitrous Oxide", "1,2,4");
+                addQuestion("Science", "MULTI_SELECT", "Which of the following organisms exhibit saprotrophic nutrition? (Select all that apply)",
+                "Yeast|Bread mould|Amoeba|Mushroom", "1,2,4");
+
                 addQuestion("Social Science", "MCQ", "Who among the following was the founder of 'Young Europe' secret society in Berne?", 
                 "Giuseppe Garibaldi|Giuseppe Mazzini|Count Cavour|Otto von Bismarck", "2");
                 addQuestion("Social Science", "MCQ", "Which of the following was the result of the Act of Union, 1707?", 
@@ -266,8 +275,12 @@ public class QuestionDAO
                 "India|Sri Lanka|USA|Belgium", "3");
                 addQuestion("Social Science", "TRUE_FALSE", "Sri Lanka adopted majoritarianism in its Constitution.", "", "true");
                 addQuestion("Social Science", "TRUE_FALSE", "The courier service belongs to the secondary sector of the economy.", "", "false");
-            
 
+                // Seed Multi-Select Questions for Social Science
+                addQuestion("Social Science", "MULTI_SELECT", "Which of the following countries are considered 'Coming Together' Federations? (Select all that apply)",
+                "USA|Switzerland|Australia|India", "1,2,3");
+                addQuestion("Social Science", "MULTI_SELECT", "Which of the following are primary sector activities? (Select all that apply)",
+                "Agriculture|Dairy farming|Banking|Fishing", "1,2,4");
 
                 System.out.println("Default questions seeded successfully!");
             }
@@ -359,6 +372,29 @@ public class QuestionDAO
         {
             boolean correctBool = Boolean.parseBoolean(answer.trim());
             return new TrueFalseQuestion(idStr, prompt, points, correctBool);
+
+        } else if ("MULTI_SELECT".equalsIgnoreCase(type)) 
+        {
+            List<String> optionList = new ArrayList<>();
+            if (options != null && !options.trim().isEmpty()) 
+            {
+                optionList = Arrays.asList(options.split("\\|"));
+            }
+
+            Set<Integer> correctIndices = new HashSet<>();
+            if (answer != null && !answer.trim().isEmpty()) 
+            {
+                String[] parts = answer.split(",");
+                for (String part : parts) 
+                {
+                    try 
+                    {
+                        correctIndices.add(Integer.parseInt(part.trim()));
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+
+            return new MultipleSelectMCQ(idStr, prompt, points, optionList, correctIndices);
         }
 
         return null;
