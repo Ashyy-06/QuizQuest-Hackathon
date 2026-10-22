@@ -60,11 +60,11 @@ public class DatabaseManager
 
         String createResultsTable = "CREATE TABLE IF NOT EXISTS quiz_results ("
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + "username TEXT NOT NULL, "
+                + "user_id INTEGER NOT NULL, "
                 + "topic TEXT NOT NULL, "
                 + "score INTEGER NOT NULL, "
                 + "total INTEGER NOT NULL, "
-                + "date_taken TEXT NOT NULL)";
+                + "FOREIGN KEY (user_id) REFERENCES users(id))";
 
         Statement stmt = null;
         Connection conn = null;

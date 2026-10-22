@@ -4,6 +4,7 @@ import database.QuestionDAO;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
 import models.Question;
@@ -26,7 +27,6 @@ public class AdminDashboardView extends JFrame
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
 
-
         JPanel headerPanel = new JPanel(new GridLayout(2, 1, 5, 5));
         headerPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
 
@@ -41,7 +41,6 @@ public class AdminDashboardView extends JFrame
         headerPanel.add(welcomeLabel);
         add(headerPanel, BorderLayout.NORTH);
 
-        
         JPanel buttonPanel = new JPanel(new GridLayout(4, 1, 12, 12));
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 40, 20, 40));
 
@@ -56,7 +55,6 @@ public class AdminDashboardView extends JFrame
         buttonPanel.add(btnLogout);
         add(buttonPanel, BorderLayout.CENTER);
 
-        
         btnAddQuestion.addActionListener(new ActionListener()
         {
             @Override
@@ -97,16 +95,15 @@ public class AdminDashboardView extends JFrame
         setVisible(true);
     }
 
-    
     private void addQuestion() 
     {
-        String topic = JOptionPane.showInputDialog(this, "Enter the topic(e.g., Science, Social Science):");
+        String topic = JOptionPane.showInputDialog(this, "Enter the topic (e.g., Science, Social Science):");
         if (topic == null || topic.trim().isEmpty()) return;
 
         String prompt = JOptionPane.showInputDialog(this, "Enter the question prompt:");
         if (prompt == null || prompt.trim().isEmpty()) return;
 
-        String[] types = {"Single Choice MCQ", "True / False"};
+        String[] types = {"Single Choice MCQ", "True / False", "Multi-Select MCQ"};
         int selectedType = JOptionPane.showOptionDialog
         (
                 this,
@@ -184,6 +181,58 @@ public class AdminDashboardView extends JFrame
             String answer = (tfChoice == 0) ? "true" : "false";
 
             success = questionDAO.addQuestion(topic.trim(), "TRUE_FALSE", prompt.trim(), "", answer);
+
+        } else if (selectedType == 2) 
+        {
+            String opt1 = JOptionPane.showInputDialog(this, "Option 1:");
+            if (opt1 == null || opt1.trim().isEmpty()) return;
+
+            String opt2 = JOptionPane.showInputDialog(this, "Option 2:");
+            if (opt2 == null || opt2.trim().isEmpty()) return;
+
+            String opt3 = JOptionPane.showInputDialog(this, "Option 3:");
+            if (opt3 == null || opt3.trim().isEmpty()) return;
+
+            String opt4 = JOptionPane.showInputDialog(this, "Option 4:");
+            if (opt4 == null || opt4.trim().isEmpty()) return;
+
+            JPanel checkPanel = new JPanel(new GridLayout(5, 1, 4, 4));
+            checkPanel.add(new JLabel("Select all options that are correct:"));
+            JCheckBox cb1 = new JCheckBox("1. " + opt1.trim());
+            JCheckBox cb2 = new JCheckBox("2. " + opt2.trim());
+            JCheckBox cb3 = new JCheckBox("3. " + opt3.trim());
+            JCheckBox cb4 = new JCheckBox("4. " + opt4.trim());
+            checkPanel.add(cb1);
+            checkPanel.add(cb2);
+            checkPanel.add(cb3);
+            checkPanel.add(cb4);
+
+            int choice = JOptionPane.showConfirmDialog(
+                this, 
+                checkPanel, 
+                "Select Correct Answers", 
+                JOptionPane.OK_CANCEL_OPTION, 
+                JOptionPane.QUESTION_MESSAGE
+            );
+
+            if (choice != JOptionPane.OK_OPTION) return;
+
+            List<String> selectedAnswers = new ArrayList<>();
+            if (cb1.isSelected()) selectedAnswers.add("1");
+            if (cb2.isSelected()) selectedAnswers.add("2");
+            if (cb3.isSelected()) selectedAnswers.add("3");
+            if (cb4.isSelected()) selectedAnswers.add("4");
+
+            if (selectedAnswers.isEmpty()) 
+            {
+                JOptionPane.showMessageDialog(this, "You must select at least one correct option.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            String optionsCombined = opt1.trim() + "|" + opt2.trim() + "|" + opt3.trim() + "|" + opt4.trim();
+            String answerIndices = String.join(",", selectedAnswers);
+
+            success = questionDAO.addQuestion(topic.trim(), "MULTI_SELECT", prompt.trim(), optionsCombined, answerIndices);
         }
 
         if (success) 
