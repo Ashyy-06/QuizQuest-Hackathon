@@ -21,7 +21,7 @@ public class QuestionDAO
     public List<String> getAllTopics() 
     {
         List<String> topics = new ArrayList<>();
-        String sql = "SELECT DISTINCT topic FROM questions ORDER BY topic ASC";
+        String sql = "SELECT DISTINCT topic COLLATE NOCASE as unique_topic FROM questions ORDER BY unique_topic ASC";
 
         Connection conn = null;
         Statement stmt = null;
@@ -35,10 +35,15 @@ public class QuestionDAO
 
             while (rs.next()) 
             {
-                String topic = rs.getString("topic");
+                String topic = rs.getString("unique_topic");
                 if (topic != null && !topic.trim().isEmpty()) 
                 {
-                    topics.add(topic.trim());
+                    String trimmed = topic.trim();
+                    String formattedTopic = Character.toUpperCase(trimmed.charAt(0)) + trimmed.substring(1);
+                    if (!topics.contains(formattedTopic)) 
+                    {
+                        topics.add(formattedTopic);
+                    }
                 }
             }
         } catch (SQLException e)
