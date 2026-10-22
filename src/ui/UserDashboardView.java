@@ -10,9 +10,13 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -20,6 +24,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import models.MultipleSelectMCQ;
 import models.Question;
 import models.QuizResult;
 import models.SingleChoiceMCQ;
@@ -97,7 +102,7 @@ public class UserDashboardView extends JFrame implements ActionListener
         if (e.getSource() == startButton) 
         {
             startQuizFlow();
-        } else if (e.getSource() == instructionsButton)
+        } else if (e.getSource() == instructionsButton) 
         {
             JOptionPane.showMessageDialog(
                 this,
@@ -106,7 +111,8 @@ public class UserDashboardView extends JFrame implements ActionListener
                 + "2. Answer each question carefully.\n"
                 + "3. For MCQ: select an option (1-4).\n"
                 + "4. For True/False: select True or False.\n"
-                + "5. Your results will automatically be saved to your history.",
+                + "5. For Multi-Select: check all correct options (All-or-Nothing scoring).\n"
+                + "6. Your results will automatically be saved to your history.",
                 "Quiz Instructions",
                 JOptionPane.INFORMATION_MESSAGE
             );
@@ -215,6 +221,48 @@ public class UserDashboardView extends JFrame implements ActionListener
 
                 boolean chosenBool = "True".equalsIgnoreCase(selection);
                 manager.submitAnswer(chosenBool);
+
+            } else if (q instanceof MultipleSelectMCQ) 
+            {
+                MultipleSelectMCQ multiQ = (MultipleSelectMCQ) q;
+                List<String> options = multiQ.getOptions();
+
+                JPanel checkPanel = new JPanel(new GridLayout(options.size() + 2, 1, 4, 4));
+                checkPanel.add(new JLabel("<html><b>Question " + questionNumber + ":</b> " + multiQ.getPrompt() + "</html>"));
+                checkPanel.add(new JLabel("<html><i>(Select all that apply - All-or-nothing scoring)</i></html>"));
+
+                List<JCheckBox> checkBoxes = new ArrayList<>();
+                for (int i = 0; i < options.size(); i++) 
+                {
+                    JCheckBox cb = new JCheckBox((i + 1) + ". " + options.get(i));
+                    checkBoxes.add(cb);
+                    checkPanel.add(cb);
+                }
+
+                int choice = JOptionPane.showConfirmDialog(
+                    this, 
+                    checkPanel, 
+                    "Quiz: " + topic, 
+                    JOptionPane.OK_CANCEL_OPTION, 
+                    JOptionPane.QUESTION_MESSAGE
+                );
+
+                if (choice != JOptionPane.OK_OPTION) 
+                {
+                    JOptionPane.showMessageDialog(this, "Quiz cancelled.");
+                    return;
+                }
+
+                Set<Integer> selectedIndices = new HashSet<>();
+                for (int i = 0; i < checkBoxes.size(); i++) 
+                {
+                    if (checkBoxes.get(i).isSelected()) 
+                    {
+                        selectedIndices.add(i + 1); // 1-based indexing
+                    }
+                }
+
+                manager.submitAnswer(selectedIndices);
             }
 
             questionNumber++;
